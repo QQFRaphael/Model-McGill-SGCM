@@ -1,0 +1,109 @@
+#!/usr/bin/sh
+
+#script to get Step1 and Step 0 state for Forcing grid data 
+#convert history file to single precision
+#
+BEGDAY=1.
+ENDDAY=10.
+ISTEP=1
+ITSTEPS=48
+
+echo 'compiling getforcepre1_test.f'
+f77 -o getforcepre1 getforcepre1_test.f
+
+INFILE=/diska/hlin/igcm/EXPR48/restart.12
+OUTFILE=/zemo2/jiaxj/igcm/results/Force/step1_51DJF.dat
+
+echo 'running getforcepre1 for restart.12'
+getforcepre1 $INFILE $OUTFILE
+
+#prepare input to presmap
+#
+cat << /EOF > temphead
+COMMON
+  TEMPDIR=/zemo2/jiaxj/igcm/smap/T21L5
+  HOMEDIR=/zemo2/jiaxj/igcm/smap/T21L5
+  CURRENTDIR=/zemo2/jiaxj/igcm/smap/T21L5
+  BEGDAY=$BEGDAY
+  ENDDAY=$ENDDAY
+  DIAGNOSTICS=SG
+  UTF=1.4
+  LEVELTYPE=IS
+  PRINT=T
+  PLOT=F
+  PRINTSIGFIG=3
+  ASCIICHARS=2
+  SCRATCH=F
+  OROGRAPHY=F
+  FREQSAMPLING=$ITSTEPS
+  FREQPRINT=$ITSTEPS
+/EOF
+cat temphead presmap11.forceSG > fort.10
+#
+#run presmap and smap
+#
+echo running presmap
+../../presmap11.out
+ln -s $OUTFILE fort.9
+
+echo running smap
+../../smap11.out
+mv gridout /zemo2/jiaxj/igcm/results/Force/step1gridout_51DJF.dat
+#mv fort.8 /zemo2/jiaxj/igcm/results/Force/titles_step1_51DJF
+#mv nrecsout /zemo2/jiaxj/igcm/results/Force/nrecs_step1_51DJF
+rm fort.*
+#
+
+# For initital data--------------------------------------------------
+BEGDAY=1.
+ENDDAY=10.
+ISTEP=1
+ITSTEPS=48
+
+#echo 'compiling getforcepre.f'
+#f77 -o getforcepre getforcepre.f
+
+INFILE=/D1/hlin/igcm/data/UVTP4849after.dat.spec_corrected
+OUTFILE=/zemo2/jiaxj/igcm/results/Force/step0_51DJF.dat
+
+echo 'running getforcepre for UVTP4849after.dat.spec_corrected'
+getforcepre $INFILE $OUTFILE
+
+
+#prepare input to presmap
+#
+cat << /EOF > temphead
+COMMON
+  TEMPDIR=/zemo2/jiaxj/igcm/smap/T21L5/Force
+  HOMEDIR=/zemo1/jiaxj/igcm/smap/Force 
+  CURRENTDIR=/zemo2/jiaxj/igcm/smap/Force 
+  BEGDAY=$BEGDAY
+  ENDDAY=$ENDDAY
+  DIAGNOSTICS=SG
+  UTF=1.4
+  LEVELTYPE=IS
+  PRINT=T
+  PLOT=F
+  PRINTSIGFIG=3
+  ASCIICHARS=2
+  SCRATCH=F
+  OROGRAPHY=F
+  FREQSAMPLING=$ITSTEPS
+  FREQPRINT=$ITSTEPS
+/EOF
+cat temphead presmap11.forceSG > fort.10
+#
+#run presmap and smap
+#
+echo running presmap
+../../presmap11.out
+ln -s $OUTFILE fort.9
+
+echo running smap
+../../smap11.out
+mv gridout /zemo2/jiaxj/igcm/results/Force/step0gridout_51DJF.dat
+#mv fort.8 /zemo2/jiaxj/igcm/results/Force/titles_step0_51DJF
+#mv nrecsout /zemo2/jiaxj/igcm/results/Force/nrecs_step0_51DJF
+rm fort.*
+#
+

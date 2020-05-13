@@ -1,0 +1,18 @@
+# /usr/bin/sh
+
+f77 monthly.f
+
+
+##------------
+echo begin...
+ln -sf /mnt/climate/data/loach/jiaxj/Data/SGCM/OutData/T31L10/LINEAR/history fort.10
+#ln -sf /mnt/climate/data/loach/jiaxj/Data/SGCM/OutData/T31L10/test/history fort.10
+
+a.out
+
+
+mv fort.11 OUTpred_sum.dat
+rm -f fort.10
+
+
+

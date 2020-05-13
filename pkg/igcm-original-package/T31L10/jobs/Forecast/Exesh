@@ -1,0 +1,49 @@
+#! /usr/bin/sh
+
+count=1
+
+while [ $count -le 1 ]
+do
+clean
+##########The breeding integration.
+echo 2getper.f
+f77 2getper.f 
+a.out $count
+
+echo 2getper.prog
+sh 2getper.prog
+clean
+
+f77  1readtotal.f
+a.out
+
+sh 3getZ.exe
+f77 4getrans.f
+a.out
+f77 5getconv.f
+a.out $count
+f77 6getrms.f
+a.out $count
+
+
+#############
+#mv OUTpred_inc.dat Inc/OUTpred_inc$count.dat
+
+KD=/zemo2/jiaxj/igcm
+EXPID=ForeExp                 # Experiment identifier.
+EXPDIR=/mnt/climate/data/loach/jiaxj/Data/SGCM/OutData/AONAO/Prediction/$EXPID       # Experiment directory.
+EXEC=../damp.exe
+[ ! -d $EXPDIR ]   &&   mkdir -p $EXPDIR
+#
+    ln  -s data  fort.7
+    ln  -s $KD/data/MG64JG16.orog.b  fort.18
+    ln  -s $KD/data/MG64JG16.mask.b  fort.19
+
+    ln  -s /mnt/climate/data/loach/jiaxj/Data/SGCM/FORCE_DJF_ave.dat_crtd  fort.13
+    ln  -s $EXPDIR/OUTpred_$count.dat  fort.9
+    $EXEC
+	
+    count=`expr $count + 1`
+clean
+done
+

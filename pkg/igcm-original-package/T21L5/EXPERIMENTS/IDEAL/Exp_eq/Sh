@@ -1,0 +1,7 @@
+sh 1monthly.exe
+f77 2getEns.f 
+a.out
+rm -f OUTpred_sum.dat
+sh 3getSLP.exe* 
+f77 4plot.f
+a.out

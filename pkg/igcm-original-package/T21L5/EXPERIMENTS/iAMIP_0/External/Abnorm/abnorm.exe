@@ -1,0 +1,58 @@
+# /usr/bin/sh
+
+f77 abnorm.f
+
+
+count=1
+while [ $count -le 9 ]
+do
+
+
+expnum=1
+while [ $expnum -le 30 ]
+do
+
+##------------
+
+  echo exp$expnum/
+ln -sf exp$expnum/season0$count.dat fort.21
+ln -sf Abnorm/abnorm0$count.dat       fort.23
+ln -sf Mean/mean0$count.dat fort.22
+a.out 
+
+
+expnum=`expr $expnum + 1`
+done
+
+
+count=`expr $count + 1`
+echo $count
+done
+
+###############
+
+while [ $count -le 51 ]
+do
+
+
+expnum=1
+while [ $expnum -le 30 ]
+do
+
+
+  echo exp$expnum/
+ln -sf exp$expnum/season$count.dat fort.21
+ln -sf Abnorm/abnorm$count.dat       fort.23
+ln -sf Mean/mean$count.dat fort.22
+a.out
+
+
+expnum=`expr $expnum + 1`
+done
+
+
+count=`expr $count + 1`
+echo $count
+done
+
+

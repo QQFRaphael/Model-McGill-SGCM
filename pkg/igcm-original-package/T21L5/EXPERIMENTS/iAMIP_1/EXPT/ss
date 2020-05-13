@@ -1,0 +1,15 @@
+#! /usr/bin/sh
+f77 s.f
+a.out
+f77 seof.f
+a.out
+
+
+
+#getZ500.exe
+#getSLP.exe
+
+#cd ..
+#clean
+#cd EXPT
+

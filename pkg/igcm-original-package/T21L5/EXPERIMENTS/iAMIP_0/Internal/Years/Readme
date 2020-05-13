@@ -1,0 +1,9 @@
+Dir Plot: this is the 51 ensemble fields that have been translated into mean grid.
+semble51.dat  is used to do EOF analysis( will be done on tropo)
+In this dir, the year*.dat is for each year, the totle of the 30*3 fields
+average.exe is used to do the ensemble,add this 90 fields and get average. 
+
+
+year*.dat is the 30*3 months for each year of the 51 years.
+mean*.dat is the ensemble mean for the 51 years.
+

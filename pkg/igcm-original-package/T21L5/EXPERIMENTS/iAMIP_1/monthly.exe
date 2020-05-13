@@ -1,0 +1,42 @@
+# /usr/bin/sh
+
+f77 monthly.f
+
+expnum=2
+while [ $expnum -le 2 ]
+do
+
+  echo $expnum
+##------------
+count=1
+while [ $count -le 9 ]
+do
+
+  echo exp$expnum/OUTpred_0$count.dat
+ln -sf exp$expnum/OUTpred_0$count.dat fort.10
+a.out 0$count
+
+count=`expr $count + 1`
+#    rm fort.10
+done
+
+while [ $count -le 306 ]
+do
+
+  echo exp$expnum/OUTpred_$count.dat
+ln -sf exp$expnum/OUTpred_$count.dat fort.10
+a.out $count
+
+count=`expr $count + 1`
+#    rm fort.10
+done
+
+  echo mv fort.11 exp$expnum/OUTpred.monthly
+mv fort.11 exp$expnum/OUTpred.monthly
+
+
+##--------
+
+   expnum=`expr $expnum + 1`
+done
+

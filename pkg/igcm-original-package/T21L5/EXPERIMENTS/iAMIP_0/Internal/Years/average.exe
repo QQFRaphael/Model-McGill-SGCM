@@ -1,0 +1,30 @@
+# /usr/bin/sh
+
+f77  average.f  
+
+count=1
+while [ $count -le 9 ]
+do
+
+
+ln -sf year0$count.dat fort.21
+ln -sf mean0$count.dat fort.22
+a.out 
+
+count=`expr $count + 1`
+done
+
+###############
+
+while [ $count -le 51 ]
+do
+
+
+ln -sf year$count.dat fort.21
+ln -sf mean$count.dat fort.22
+a.out
+
+count=`expr $count + 1`
+done
+
+

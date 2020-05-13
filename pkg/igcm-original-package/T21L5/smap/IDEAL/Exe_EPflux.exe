@@ -1,0 +1,23 @@
+#!/usr/bin/sh
+
+count=1
+
+while [ $count -le 30 ]
+do
+
+
+f77 W1getTaEP.f
+ln -sf /mnt/climate/data/loach/jiaxj/Data/SGCM/OutData/IDEAL/145E/First30/Z500_clim$count.dat fort.11
+ln -sf /mnt/climate/data/loach/jiaxj/Data/SGCM/OutData/IDEAL/145E/First30/Z500Anom$count.dat fort.12
+a.out
+###################
+
+f77 W2getTaEP.f
+a.out
+mv Wvector.dat /mnt/climate/data/loach/jiaxj/Data/SGCM/OutData/IDEAL/145E/First30/Wvector_$count.dat
+
+    count=`expr $count + 1`
+done
+
+clean
+

@@ -1,0 +1,36 @@
+#! /usr/bin/sh
+KD=/zemo2/jiaxj/igcm/T21L5
+EXPID=exp18                 # Experiment identifier.
+EXPDIR=/mnt/climate/data/loach/jiaxj/Data/SGCM/OutData/SVD2/SVD2_Detrend/$EXPID  # Experiment directory.
+EXEC=test.exe
+############################################# UPDATE DIRECTIVES.
+[ ! -d $EXPDIR ]   &&   mkdir -p $EXPDIR
+#
+    ln  -s data  fort.7
+    ln  -s $KD/data/MG64JG16.orog.b  fort.18
+    ln  -s $KD/data/MG64JG16.mask.b  fort.19
+
+count=1
+while [ $count -le 9 ]
+do
+ 	getic $count
+    ln  -s /mnt/climate/data/loach/jiaxj/Data/SGCM/Input/T21L5/FORCE/Tropical-SVD2/SVD2_Detrend/FORCE_DJF0$count.dat  fort.13
+    ln  -s $EXPDIR/OUTpred_0$count.dat  fort.9
+#
+    $EXEC
+
+    count=`expr $count + 1`
+    rm fort.10 fort.13 fort.9
+done
+
+while [ $count -le 51 ]
+do
+	getic $count
+    ln  -s /mnt/climate/data/loach/jiaxj/Data/SGCM/Input/T21L5/FORCE/Tropical-SVD2/SVD2_Detrend/FORCE_DJF$count.dat  fort.13
+    ln  -s $EXPDIR/OUTpred_$count.dat  fort.9
+#
+    $EXEC
+
+    count=`expr $count + 1`
+    rm fort.10 fort.13 fort.9
+done

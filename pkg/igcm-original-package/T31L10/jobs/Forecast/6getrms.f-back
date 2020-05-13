@@ -1,0 +1,103 @@
+CC get initial confdition
+      PARAMETER (NWJ2=121,NHEM=2,NL=5,
+     &IGA=NWJ2*NHEM,IGB=NL*IGA)
+      COMPLEX*16 Z(IGB),D(IGB),T(IGB),SP(IGA)
+      COMPLEX*16 ZA(IGB),DA(IGB),TA(IGB),SPA(IGA)
+      COMPLEX*16 ZI(IGB),DI(IGB),TI(IGB),SPI(IGA)
+      COMPLEX*16 ZM(IGB),DM(IGB),TM(IGB),SPM(IGA)
+        REAL*8 RKOUNT,RMTAPE,DAY
+
+	parameter(M1=73,N=37,Nrun=1,L=15,nlen=5,nm=Nrun*nlen)
+	real x(M1,N),tt(M1,N),ss(M1,N),y(M1,N)
+	real std(nm),ssd(nlen),x1(M1,N,5),x2(M1,N)
+
+        character*3 cy
+CC---
+        call getarg(1,cy)
+cc convert from character to integer--
+        read(cy,'(i3)')mp
+
+
+ 	open(12,file='fort.51
+     & ', form='unformatted')
+        open(13, 
+     & file='fort.41',form='unformatted',status='old')
+
+
+	  do kk=1,5
+           read(12) tt
+           read(13) ss
+	   do i=1,M1
+	   do j=1,N
+	     x1(i,j,kk)=sqrt((ss(i,j)-tt(i,j))**2)
+	   end do
+	   end do
+          end do
+
+
+           do i=1,M1
+           do j=1,N
+               qq=0.
+            do kk=1,5
+               qq=qq+x1(i,j,kk)/real(5)
+            end do
+               x(i,j)=qq
+          end do
+          end do
+
+
+            rr=0.
+           do i=1,M1
+           do j=1,N
+              rr=rr+x(i,j)/real(M1*N)
+           end do
+           end do
+	      print*, rr
+	     bb=(65./rr)*0.1
+	     print*, bb
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+
+
+CCC 13 is the original initial condition, 11 is the climatology.
+        OPEN(15,FILE=
+     &'/zemo2/jiaxj/Internal/Prediction/NewdampData/fort.36')
+
+        do kk=1,mp
+        read(15,*) nn
+        end do
+        mm=nn-8
+	print*, mm
+
+        OPEN(12,FILE=
+     &'/zemo2/jiaxj/Internal/Prediction/NewdampData/OUTpred_cont.dat',
+c    &'/zemo2/jiaxj/Internal/Prediction/NewdampData/OUTpred_total.dat',
+     &form='UNFORMATTED')
+        OPEN(16,
+     & FILE='OUTpred_per.dat',form='UNFORMATTED')
+
+         READ(16)RKOUNT,RMTAPE,DAY,ZI,DI,TI,SPI,RMTAPE
+        do kk=1,mm
+         READ(12)
+        end do
+         READ(12)RKOUNT,RMTAPE,DAY,Z,D,T,SP,RMTAPE
+
+         DO I=1,IGB
+       ZA(I)=(ZI(I)-Z(I))*bb+Z(I)
+       DA(I)=(DI(I)-D(I))*bb+D(I)
+       TA(I)=(TI(I)-T(I))*bb+T(I)
+       ENDDO
+       DO I=1,IGA
+       SPA(I)=(SPI(I)-SP(I))*bb+SP(I)
+       ENDDO
+
+      RKOUNT=0.
+      DAY=0.
+        WRITE(10)RKOUNT,RMTAPE,DAY,ZA,DA,TA,SPA,RMTAPE
+
+
+
+        stop
+        end
+
+
+

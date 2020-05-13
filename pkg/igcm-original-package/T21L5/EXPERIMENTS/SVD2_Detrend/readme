@@ -1,0 +1,14 @@
+1) use 1getRegSVD2.f get the regCoeff-SVD2.dat and FORCEanom_RegSVD2.
+2) use /zemo2/jiaxj/force/BUDGET/tste.sh to transfer FORCEanom_RegSVD2 to spec.dat
+3) 3getTroZDTP.f 5getTro_T.f are used to split the tropical and extropical and only T anomaly fields. the result is tro.dat.
+4) use /zemo2/jiaxj/force/BUDGET/test.sh to transfer tro.dat to spec.dat.
+5) 4getsumTroZDTP.f 6getsum_Tro_T.f are used to get the total forcing field, which is used for the SGCM.
+
+
+6) 2get51force_SVD2.f; 7get51force_SVD2_T.f; 7get51force_SVD2_Tro_T.f are used to get 51 forcing fields.
+
+
+
+
+
+

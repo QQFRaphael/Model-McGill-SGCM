@@ -1,0 +1,16 @@
+# /usr/bin/sh
+
+f77 monthly.f
+
+
+##------------
+echo begin...
+ln -sf PERT1/history fort.10
+a.out
+
+
+mv fort.11 OUTpred_sum.dat
+rm -f fort.10
+
+
+

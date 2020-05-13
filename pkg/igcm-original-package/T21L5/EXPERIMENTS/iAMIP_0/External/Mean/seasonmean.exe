@@ -1,0 +1,26 @@
+# /usr/bin/sh
+
+f77 seasonmean.f 
+
+expnum=1
+while [ $expnum -le 30 ]
+do
+
+  echo $expnum
+##------------
+
+  echo ../exp$expnum/ZT_monthly.dat
+ln -sf ../exp$expnum/ZT_monthly.dat fort.21
+a.out 
+
+mkdir ./exp$expnum
+mv season* ./exp$expnum
+
+expnum=`expr $expnum + 1`
+done
+
+
+
+
+
+

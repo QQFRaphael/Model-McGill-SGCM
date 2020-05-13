@@ -1,0 +1,5 @@
+rm -f core
+rm -f fort.2
+rm -f fort.9
+rm -f fort.13
+

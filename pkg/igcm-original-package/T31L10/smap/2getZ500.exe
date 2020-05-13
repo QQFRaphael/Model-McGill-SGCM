@@ -1,0 +1,67 @@
+#!/usr/bin/sh
+
+clean
+#script to get Z500
+#convert history file to single precision
+#
+BEGDAY=1.
+ENDDAY=1.
+ISTEP=1
+ITSTEPS=64
+
+echo 'compiling getZ500pre.f'
+f77 -o getZ500pre getZ500pre.f
+
+INFILE=/mnt/climate/data/loach/jiaxj/Data/SGCM/OutData/T31L10/CONTROL/OUTpred.dat_monly
+#INFILE=daily1.dat
+
+echo 'running getZ500pre'
+
+cat << /EOF | getZ500pre $INFILE
+$BEGDAY
+$ENDDAY
+$ISTEP
+/EOF
+
+
+#prepare input to presmap
+#
+cat << /EOF > temphead
+COMMON
+  TEMPDIR=/zemo2/jiaxj/igcm/T31L10/smap
+  HOMEDIR=/zemo2/jiaxj/igcm/T31L10/smap
+  CURRENTDIR=/zemo2/jiaxj/igcm/T31L10/smap
+  BEGDAY=$BEGDAY
+  ENDDAY=$ENDDAY
+  DIAGNOSTICS=SG
+  UTF=1.4
+  LEVELTYPE=IS
+  PRINT=T
+  PLOT=F
+  PRINTSIGFIG=3
+  ASCIICHARS=2
+  SCRATCH=F
+  OROGRAPHY=F
+  FREQSAMPLING=$ITSTEPS
+  FREQPRINT=$ITSTEPS
+/EOF
+cat temphead presmap11.Z500SG > fort.10
+#
+#run presmap and smap
+#
+echo running presmap
+presmap11.out
+ln -s data.res.sp fort.9
+
+echo running smap
+smap11.out
+mv gridout Z500.dat
+#mv gridout /mnt/climate/data/loach/jiaxj/Data/SGCM/OutData/T31L10/CONTROL/Z500.dat
+mv fort.8 titles_Z500_CONTROL
+#mv nrecsout nrecs_Z500_CONTROL
+rm fort.*
+#
+
+# new job-------------------
+#
+clean

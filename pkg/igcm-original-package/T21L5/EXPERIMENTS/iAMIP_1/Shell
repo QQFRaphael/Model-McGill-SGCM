@@ -1,0 +1,15 @@
+#! /usr/bin/sh
+echo excute monthe.exe.......
+#monthly.exe
+
+getZ500.exe
+getSLP.exe
+
+f77 getAveZ500.f
+a.out
+
+f77 getAveSLP.f
+a.out
+
+f77 51EOF.f
+a.out

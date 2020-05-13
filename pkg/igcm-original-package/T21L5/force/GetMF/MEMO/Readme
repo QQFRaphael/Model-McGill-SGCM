@@ -1,0 +1,8 @@
+CCC
+Two programs that used to tranform gauss to grid data
+ (128,64) (64,32)
+
+#/zemo2/jiaxj/force/DHEOF3/gausstogrid128.f
+#include "/diska/hlin/qgmodel/plot/gausstogrid.f"
+
+

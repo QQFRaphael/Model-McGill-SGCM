@@ -1,0 +1,14 @@
+DSET fort.30
+TITLE resp
+OPTIONS sequential
+UNDEF  8888.88 
+FORMAT yrev
+XDEF  37 LINEAR 0 10
+YDEF  14 LINEAR  20 5 
+ZDEF   1 LINEAR  1 1
+TDEF   2 LINEAR  0Z27may1998 12hr
+VARS   1
+resp  0  0  resp data
+ENDVARS
+
+

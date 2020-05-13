@@ -1,0 +1,74 @@
+#!/usr/bin/sh
+expnum=1
+
+while [ $expnum -le 1 ]
+do
+
+  echo $expnum
+#===
+
+clean
+#script to get Z500
+#convert history file to single precision
+#
+BEGDAY=1.
+ENDDAY=360.
+ISTEP=1
+ITSTEPS=48
+
+echo 'compiling getSLPpre.f'
+f77 -o getSLPpre getSLPpre.f
+
+INFILE=./exp$expnum/OUTpred.monthly
+
+echo 'running getSLPpre'
+
+cat << /EOF | getZ500pre $INFILE
+$BEGDAY
+$ENDDAY
+$ISTEP
+/EOF
+
+
+#prepare input to presmap
+#
+cat << /EOF > temphead
+COMMON
+  TEMPDIR=/zemo2/jiaxj/igcm/iAMIP_1
+  HOMEDIR=/zemo2/jiaxj/igcm/iAMIP_1
+  CURRENTDIR=/zemo2/jiaxj/igcm/iAMIP_1
+  BEGDAY=$BEGDAY
+  ENDDAY=$ENDDAY
+  DIAGNOSTICS=SG
+  UTF=1.4
+  LEVELTYPE=IS
+  PRINT=T
+  PLOT=F
+  PRINTSIGFIG=3
+  ASCIICHARS=2
+  SCRATCH=F
+  OROGRAPHY=F
+  FREQSAMPLING=$ITSTEPS
+  FREQPRINT=$ITSTEPS
+/EOF
+cat temphead presmap11.SLPSG > fort.10
+#
+#run presmap and smap
+#
+echo running presmap
+presmap11.out
+ln -s data.res.sp fort.9
+
+echo running smap
+smap11.out
+mv gridout exp$expnum/SLP_monthly.dat
+#mv fort.8 exp$expnum/titles_Z
+#mv nrecsout exp$expnum/nrecs_Z
+rm -f fort.*
+rm -f data.*
+
+##--------
+
+   expnum=`expr $expnum + 1`
+done
+

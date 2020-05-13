@@ -1,0 +1,27 @@
+#! /usr/bin/sh
+KD=/zemo2/jiaxj/igcm
+EXPID=exp1                 # Experiment identifier.
+EXPDIR=/zemo2/jiaxj/igcm/iAMIP_0/$EXPID          # Experiment directory.
+#EXEC=prog.exe       # Full path of the executable 
+EXEC=test.exe
+############################################# UPDATE DIRECTIVES.
+[ ! -d $EXPDIR ]   &&   mkdir -p $EXPDIR
+#
+    ln  -s data  fort.7
+    ln  -s $KD/data/MG64JG16.orog.b  fort.18
+    ln  -s $KD/data/MG64JG16.mask.b  fort.19
+
+count=100
+
+while [ $count -le 306 ]
+do
+	getic $count
+    ln  -s /zemo2/jiaxj/data/FORCE/FORCE_DJF$count.dat  fort.13
+    ln  -s $EXPDIR/OUTpred_$count.dat  fort.9
+	echo $/FORCE_DJF$count.dat
+#
+    $EXEC
+
+    count=`expr $count + 1`
+    rm fort.10 fort.13 fort.9
+done

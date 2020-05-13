@@ -1,0 +1,4 @@
+#! /usr/bin/sh
+
+sh 1.prog
+sh 2.prog

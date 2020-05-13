@@ -1,0 +1,7 @@
+
+f77 G5getdaily73.f 
+a.out 
+
+f77 G6getdaily73.f  
+a.out 
+

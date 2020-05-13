@@ -1,0 +1,4 @@
+f77  4getres1.f
+a.out
+f77 getspacorr.f
+a.out

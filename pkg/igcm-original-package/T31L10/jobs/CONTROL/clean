@@ -1,0 +1,4 @@
+rm fort.*
+#rm -f data
+rm -f up*
+

@@ -1,0 +1,17 @@
+COMMON
+  TEMPDIR=/zemo2/jiaxj/igcm/smap/T21L5/Force
+  HOMEDIR=/zemo1/jiaxj/igcm/smap/Force 
+  CURRENTDIR=/zemo2/jiaxj/igcm/smap/Force 
+  BEGDAY=1.
+  ENDDAY=10.
+  DIAGNOSTICS=SG
+  UTF=1.4
+  LEVELTYPE=IS
+  PRINT=T
+  PLOT=F
+  PRINTSIGFIG=3
+  ASCIICHARS=2
+  SCRATCH=F
+  OROGRAPHY=F
+  FREQSAMPLING=48
+  FREQPRINT=48

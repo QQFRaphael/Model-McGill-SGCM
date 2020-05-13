@@ -1,0 +1,6 @@
+rm -f fort.*
+rm -f data.*
+rm -f temp*
+rm -f nrec*
+rm -f gridout
+rm -f a.out

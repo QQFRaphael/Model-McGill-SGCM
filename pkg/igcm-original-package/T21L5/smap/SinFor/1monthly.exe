@@ -1,0 +1,22 @@
+# /usr/bin/sh
+
+f77 monthly.f
+
+
+##------------
+count=1
+while [ $count -le 50 ]
+do
+
+  echo OUTpred_$count.dat
+ln -sf  /mnt/climate/data/loach/jiaxj/Data/SGCM/OutData/IDEAL/test/OUTpred_$count.dat fort.10
+a.out
+
+count=`expr $count + 1`
+done
+
+mv fort.11 /mnt/climate/data/loach/jiaxj/Data/SGCM/OutData/IDEAL/test/OUTpred_sum.dat
+
+rm -f fort.*
+
+

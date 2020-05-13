@@ -1,0 +1,20 @@
+1)  2getper.f ---- This is used to read out the initial condition of each event (27 days before the s0 day, file OUTpred_total.dat ). Then plus a perturbation onto the IC. The perturbation is obtained using seeding function times the climatology field. Generate file fort.10
+
+
+2) sh 2getper.prog --- Then use the perturbed IC (fort.10) and the climatological forcing (/D1/hlin/igcm/data/FORCE_DJF_ave.dat_crtd) drive the model to integrate 20 days. Generate: OUTpred_inc.dat. 
+
+3) 1readtotal.f ---  reread file OUTpred_inc.dat. Generate: OUTpred_per.dat
+
+4) 3getZ.exe ---  get geopotential height from OUTpred_per.dat. Generate: Z.dat
+
+5) 4getrans.f ---  transfer Z.dat to grid formate file: fort.41
+
+6) 5getconv.f --- Read the file: Z73.dat (from OUTpred_total.dat ) to get the IC of the integration (7 days before the s0 day). Generate: fort.51.
+
+7) 6getrms.f --- compare fort.41 to fort.51 get the scale of the pertubation, scale the perturbation and add to the initial condition. Generate: fort.10
+
+CCC finish the breeding integration and then drive the SGCM using above fort.10 and climatological forcing (/D1/hlin/igcm/data/FORCE_DJF_ave.dat_crtd) drive the model to do prediction for 15 days.
+
+
+
+

@@ -1,0 +1,11 @@
+#! /usr/bin/sh
+
+sh run.prog1
+sh run.prog2
+sh run.prog3
+sh run.prog4
+sh run.prog5
+sh run.prog6
+sh run.prog7
+sh run.prog8
+sh run.prog9

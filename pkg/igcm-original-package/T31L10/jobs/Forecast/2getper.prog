@@ -1,0 +1,21 @@
+#! /usr/bin/sh
+KD=/zemo2/jiaxj/igcm
+EXPID=ForeExp                 # Experiment identifier.
+EXPDIR=/zemo2/jiaxj/igcm/jobs/T21L5.48/EXPE/Exer          # Experiment directory.
+EXEC=../damp.exe
+############################################# UPDATE DIRECTIVES.
+[ ! -d $EXPDIR ]   &&   mkdir -p $EXPDIR
+#
+    ln  -s data1  fort.7
+    ln  -s $KD/data/MG64JG16.orog.b  fort.18
+    ln  -s $KD/data/MG64JG16.mask.b  fort.19
+
+#	getic $count
+    ln  -s /mnt/climate/data/loach/jiaxj/Data/SGCM/FORCE_DJF_ave.dat_crtd  fort.13
+    ln  -s OUTpred_inc.dat  fort.9
+#
+    $EXEC
+
+    rm fort.10 fort.13 fort.9
+    clean
+

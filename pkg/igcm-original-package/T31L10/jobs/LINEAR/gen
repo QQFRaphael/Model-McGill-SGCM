@@ -1,0 +1,14 @@
+sh ONEStepCLIM.job
+clean
+sh 1getforceLinear.sh
+
+sh Linear.job
+clean
+
+sh 2monthly.exe
+sh 3getZ500.exe
+f77 4transfer.f
+a.out
+f77 5getresp.f
+a.out
+

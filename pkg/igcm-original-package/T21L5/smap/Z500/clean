@@ -1,0 +1,7 @@
+rm -f fort*
+rm -f Z500_PERT-E1.dat
+rm -f data.res.sp
+rm -f nrecsout
+rm -f temphead
+rm -f getZ500pre
+

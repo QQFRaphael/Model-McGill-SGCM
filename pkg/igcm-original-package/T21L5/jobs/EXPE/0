@@ -1,0 +1,124 @@
+1,2c1,2
+< #! /bin/ksh
+< set -xve
+---
+> #!/bin/csh
+> set echo
+7,9d6
+< # Read full history initial data.         #
+< # If training run set LTRAIN=.T. in       #
+< # namelist and read data.seq into chan 10 #
+11d7
+< set +v
+15,27c11,18
+< KD=/zemo2/jiaxj/igcm        # Root path for model files
+< KD2=/pike/jiaxj/igcm/Control
+< EXPID=Zemo1                 # Experiment identifier.
+< EXPDIR=/zemo2/jiaxj/igcm/$EXPID          # Experiment directory.
+< MACHINE=sgi                     # (sun/sgi) only
+< COMPILE=yes                     # Nupdate and compile (yes/no)
+< RUN=yes                         # run an executable already created
+<                                 # (yes/no)
+< EXEC=/zemo2/jiaxj/igcm/$EXPID/prog  # Full path of the executable 
+< #                               # either to be created if COMPILE=yes
+< #                               # or to be run if COMPILE=no
+< #
+< ############################################# UPDATE DIRECTIVES.
+---
+> set KD=/home/jiaxj/Work/SGCM/T31L10-T21L5         # Root path for model files
+> set KD2=/home/jiaxj/Work/SGCM/T31L10-T21L5/data/T21L5
+> set EXPDIR=/home/jiaxj/Work/SGCM/T31L10-T21L5/Output # Experiment directory.
+> set COMPILE=yes                           # Nupdate and compile (yes/no)
+> set RUN=yes                               # run an executable already created (yes/no)
+> set EXEC=./prog                     # Full path of the executable
+> #                                         # either to be created if COMPILE=yes
+> #                                         # or to be run if COMPILE=no
+30a22
+> ############################################# UPDATE DIRECTIVES.
+743c735
+<  &INPRN KRUN=1036800,BEGDAY=0.,KITS=0,TSPD=48.,PNU=0.01
+---
+>  &INPRN KRUN=4800,BEGDAY=0.,KITS=0,TSPD=48.,PNU=0.01
+771,782d762
+< ############################################# ERROR PROCESSING FUNCTION.
+< #
+< ABORT ()
+< {
+< echo '!!!!!!!!!! ERROR PROCESSING !!!!!!!!!!'
+< set +e
+< #[ $1 = EXECUTE ]  &&  cat fort.2            # List output.
+< #[ $1 = EXECUTE ]  &&  debug -B -s $EXEC
+< #\rm data updates igcm1.f fort.* prog
+< exit 1
+< }
+< #
+785,802c765,768
+< if [ $COMPILE = yes ]
+< then
+<     nupdate  -p $KD/igcm1.npl  -c igcm1     \
+<              -i updates                     \
+<              -f  -w 72  -o sq       ||  ABORT NUPDATE
+< if [ $MACHINE = sun ] 
+< then
+<     fflags='-O3 -fast -r8 -f -w '
+< fi
+< if [ $MACHINE = sgi ] 
+< then
+<      fflags='-O3 -static -r8'
+< #    fflags=' -r8'    ## turn off optimization
+< fi
+<     f77  $fflags -o $EXEC igcm1.f -L $KD/lib \
+<       -l$MACHINE'fft1' -l$MACHINE'blas1' -l$MACHINE'util1' || ABORT f77
+< #rm igcm1.f
+< fi
+---
+> if ( $COMPILE ==  yes ) then
+>     $KD/bin/nupdate_linux -p $KD/lib/igcm1.npl -c igcm1 -i updates -f -w 72 -o sq
+>     ifort -cm -w -r8 -O3 -tpp7 -axW -xW -o $EXEC igcm1.f -L $KD/lib -labort -laux -lblas -lfft -lutil
+> endif
+804d769
+< ## jxj
+806,807c771
+< if [ $RUN = yes ]
+< then
+---
+> if ( $RUN == yes ) then
+809,812c773,783
+<     ln  -s /mnt/climate/data/loach/jiaxj/Data/SGCM/UVTP4849after.dat.spec_corrected  fort.10
+<     ln  -s /mnt/climate/data/loach/jiaxj/Data/SGCM/FORCE_DJF_ave.dat_crtd  fort.13
+<     ln  -s $KD/data/MG64JG16.orog.b  fort.18
+<     ln  -s $KD/data/MG64JG16.mask.b  fort.19
+---
+>     ln  -s $KD2/MG64JG16.orog.b  fort.18
+>     ln  -s $KD2/MG64JG16.mask.b  fort.19
+> 
+> 
+> 
+>     ln  -s $KD2/FORCE_51DJFave.dat  fort.13
+> #   ln  -s $KD2/UVTP4849after.dat.spec_corrected  fort.10
+>     ln  -s $KD2/UVTP4849after.dat.51DJFave  fort.10
+> #   ln  -s /pike/hlin/igcm/ERA-40/FORCE_44DJFave.dat  fort.13
+> #   ln  -s $EXPDIR/data.fed  fort.14
+> #   ln  -s $KD2/data.fan  fort.15
+820c791
+<     set +e                                  # Disable exit on error.
+---
+> #    cat fort.2
+822,834c793,795
+< fi
+< exit 0                                      # Successful termination.
+< done
+< #
+< ############################################# ERROR PROCESSING.
+< #
+< set +e                                      # Disable exit on error.
+< #cat fort.2                                  # List output.
+< #debug  -B  -s prog                          # Debug.
+< rm fort.*
+< exit 1                                      # Abort.
+< #
+< ############################################# END OF JOB.
+---
+> #   rm data fort.*
+> 
+> endif

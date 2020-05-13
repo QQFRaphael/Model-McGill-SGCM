@@ -1,0 +1,7 @@
+#! /usr/bin/sh
+f77 1.f
+a.out
+sh 2.exe
+f77 3.f
+a.out
+

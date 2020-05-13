@@ -1,0 +1,7 @@
+mmm=50
+
+ncargf77 -32 getsignifce.f
+
+a.out $mmm
+
+

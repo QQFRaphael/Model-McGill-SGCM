@@ -1,0 +1,16 @@
+# /usr/bin/sh
+
+
+expnum=19
+while [ $expnum -le 30 ]
+do
+
+mkdir exp$expnum
+
+
+
+##--------
+
+   expnum=`expr $expnum + 1`
+done
+

@@ -1,0 +1,23 @@
+#!/usr/bin/sh
+
+
+
+mm=1
+f77 1readtotal.f
+a.out $mm
+
+sh 2getZ.exe
+
+f77 3transf.f 
+a.out $mm
+
+f77 4getcon.f
+a.out $mm
+
+f77 5getrmsglo5lev.f
+a.out $mm
+
+mv fort.35 rms.dat
+clean
+rm -f OUTpred_total.dat
+

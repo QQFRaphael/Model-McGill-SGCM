@@ -1,0 +1,934 @@
+#! /bin/ksh
+set -xve
+#-----------------------------------------#
+# Run Reading Spectral Model.             #
+# 100. climate mode.                      #
+# T21L5   ***GLOBAL***                    #
+# Read full history initial data.         #
+# If training run set LTRAIN=.T. in       #
+# namelist and read data.seq into chan 10 #
+#-----------------------------------------#
+set +v
+#
+############################################# USER SWITCHES.
+#
+KD=/zemo2/jiaxj/igcm        # Root path for model files
+#KD2=/D1/hlin/igcm/data
+KD2=/diskc/jiaxj/force
+EXPID=BUDGET                    # Experiment identifier.
+EXPDIR=/zemo2/jiaxj/igcm/$EXPID          # Experiment directory.
+MACHINE=sgi                     # (sun/sgi) only
+COMPILE=yes                      # Nupdate and compile (yes/no)
+RUN=yes                         # run an executable already created
+                                # (yes/no)
+EXEC=/zemo2/jiaxj/igcm/$EXPID/prog       # Full path of the executable 
+#                               # either to be created if COMPILE=yes
+#                               # or to be run if COMPILE=no
+#
+############################################# UPDATE DIRECTIVES.
+#
+[ ! -d $EXPDIR ]   &&   mkdir -p $EXPDIR
+#
+cat  <<  /EOF  >  updates
+*IDENT G100
+*D PARAM1.5,6
+      PARAMETER(NN=21,MM=21,NHEM=2,NL=5,MOCT=1,MG=64,JG=16,NWJ2=121
+     P         ,NCRAY=64,JGL=JG)
+*/
+*IDENT NICK
+*/Add extra namelist variables and for logic control 
+*/(in common BLANK and namelist INPRN) extra grid point 
+*/damping parameters (in common RESTOR and namelist INPRS)
+*/and set defaults.
+*I SC970203.1
+     +              ,LGPDAMP,LFCE,LFED,LFAN,LLIN,LMODE,LTRAIN
+*I SC970203.2
+     +       ,LGPDAMP,LFCE,LFED,LFAN,LLIN,LMODE,LTRAIN
+*I SC970203.3
+     + ,LGPDAMP,LFCE,LFED,LFAN,LLIN,LMODE,LTRAIN
+*D INIRES.11
+      NAMELIST/INPRS/ RESTIM,AA1,AA2,AAT
+*I SC970203.4
+      LNOISE=.FALSE.
+      LGPDAMP=.TRUE.
+      LFCE=.TRUE.
+      LFED=.TRUE.
+      LFAN=.FALSE.
+      LLIN=.FALSE.
+      LMODE=.FALSE.
+*I INISET.99
+C*****check logic of LTRAIN, LFCE, LFED, LFAN and KRUN makes sense 
+C     after reading namelists (don't force in a training run 
+C     and traiing should be for one timestep only)
+C
+C     IF (LTRAIN) THEN
+C        IF (LFCE) THEN
+C        PRINT*,'WARNING - LFCE OVERRIDE TO .FALSE. IN A TRAINING RUN'
+C        LFCE=.FALSE.
+C        END IF
+C        IF (LFED) THEN
+C        PRINT*,'WARNING - LFED OVERRIDE TO .FALSE. IN A TRAINING RUN'
+C        LFED=.FALSE.
+C        END IF
+C        IF (LFAN) THEN
+C        PRINT*,'WARNING - LFAN OVERRIDE TO .FALSE. IN A TRAINING RUN'
+C        LFAN=.FALSE.
+C        END IF
+C        IF (KRUN.NE.1) THEN
+C        PRINT*,'WARNING - KRUN OVERRIDE TO 1 IN A TRAINING RUN'
+C        KRUN=1
+C        END IF
+C     END IF
+*I INIRES.13
+      AA1=0.
+      AA2=0.
+      AAT=0.
+*/
+*/ Check for specific run identifier on input restart data.
+*D INISTR.115
+            IF (ABS(100.-RM2TAPE) .GT. 1.0E-03) THEN
+*D INISTR.162
+            IF (ABS(100.-RM2TAPE) .GT. 1.0E-03) THEN
+*/
+*/if balancing initial data, read initial history record into 
+*/ZDMP etc and then just copy zonal mean ZDMP into Z
+*I INIBAL.12
+*CALL RESTOR
+*I INIBAL.43
+      REWIND(7)
+*I INIBAL.59
+C*****temporarily use DMP fields to read in initial data to be balanced
+            READ(10)RKOUNT,RM1TAPE,DAY,ZDMP,DDMP,TDMP,SPDMP,RM2TAPE
+            IF (ABS(RM1TAPE-RM2TAPE) .GT. 1.0E-03) THEN
+               PRINT*,'RECORD WRONG LENGTH IN A BALANCING RUN'
+               STOP
+            ENDIF
+            IF (ABS(100.-RM2TAPE) .GT. 1.0E-03) THEN
+               PRINT*,'RECORD IDENTIFIER WRONG IN A BALANCING RUN'
+               STOP
+            ENDIF
+*D INIBAL.61,73
+      DO K=1,IGB
+      Z(K)=ZDMP(K)
+      D(K)=DDMP(K)
+      ENDDO
+*D INIBAL.80,107
+      DO K=1,IGB
+      T(K)=TDMP(K)
+      D(K)=DDMP(K)
+      ENDDO
+      DO K=1,IGA
+      SP(K)=SPDMP(K)
+      ENDDO
+*I INIBAL.112
+      ENDIF
+*/
+*/output to screen to check progress of run
+*I MLTRI.156
+      PRINT*,'-------------   DAY = ',NINT(DAY)
+      PRINT*,'Z(100) = ',Z(100)
+*I MLTRI.201
+C     PRINT*,'FINISHED TIMESTEP, KOUNT = ',KOUNT
+C     PRINT*,'Z(100) = ',Z(100)
+      IF (LMODE.AND.KOUNT.GE.5) CALL SCALEDOWN
+*/option to change final restart to final history record 
+*/to save disk space in multiple initial condition runs
+*/D MLTRI.210
+*/      WRITE(12)RKOUNT,RNTAPE,DAY,Z,D,T,SP,RNTAPE
+*/
+*/changes to vertical scheme
+*I INISI.91
+C*****redefine G matrix: hard wire hack old T scheme back in 
+C*****ONLY VALID FOR equispaced levels and isothermal 
+C*****reference temperature - so TAU = AKAP*T0*(G transpose). 
+
+C     DO L=1,NL-1
+C     ALPHA(L)=LOG(SIGMA(L+1)/SIGMA(L)) / 2.
+C     ENDDO
+C     ALPHA(NL)=LOG(1./SIGMA(NL))
+C     DO J=2,NL
+C     DO I=1,J-1
+C     II=J+(I-1)*NL
+C     G(II)=ALPHA(J-1)+ALPHA(J)
+C     ENDDO
+C     ENDDO
+C     DO I=1,NL
+C     II=I+(I-1)*NL
+C     G(II)=ALPHA(I)
+C     ENDDO
+C
+C*****Or try an alternative vertical scheme as in my paper
+C     G(1)=0.6017
+C     G(7)=0.3510
+C     G(13)=0.1737
+C     G(19)=0.1122
+C     G(25)=0.1276
+C     print*,'input G(25) NOW!!'
+C     read(*,*)G(25)
+
+
+*D MGRMLT.70,71
+              UTG(J,L)=0.
+              VTG(J,L)=0.
+
+C***** NA
+              UTG(J,L)=UG(J,L)*TG(J,L)
+              VTG(J,L)=VG(J,L)*TG(J,L)
+
+*D MGRMLT.79,86
+
+                  TNLG(J,L)=0.
+
+C***** DA
+                  TNLG(J,L)=TNLG(J,L) + TG(J,L)*DG(J,L)
+
+C***** VA
+                  TNLG(J,L)=TNLG(J,L)
+     1                      -                      
+     2                      RDSIG(L)*(SDOTP(I,L)*(TG(J,L+1)-TG(J,L))+   
+     3                      SDOTP(I,L-1)*(TG(J,L)-                      
+     4                      TG(J,L-1))+VPG(J)*(T01S2(L)*SIGMAH(L)+      
+     5                      T01S2(L-1)*SIGMAH(L-1))-                    
+     6                      SUMD(I)*(T01S2(L-1)+T01S2(L))+              
+     7                      TSUM*DSIGMA(L)*T01S2(L-1))                  
+
+
+C***** AH
+                  TNLG(J,L)=TNLG(J,L) + AKAP*TG(J,L)*(TSUM-TPTB(I))+
+     1                      TKP(L)*(TSUM-TPTA(I))
+
+*D MGRMLT.105,108
+
+                  TNLG(J,L)=0.
+
+C***** DA
+                  TNLG(J,L)=TNLG(J,L) + TG(J,L)*DG(J,L)
+
+C***** VA
+                  TNLG(J,L)=TNLG(J,L)
+     1                      -                      
+     2                      RDSIG(L)*(SDOTP(I,K)*(TG(J,K+1)-TG(J,K))+   
+     3                      T01S2(K)*(SIGMAH(K)*VPG(J)-SUMD(I)))        
+
+C***** AH
+                  TNLG(J,L)=TNLG(J,L) + AKAP*TG(J,L)*(TSUM-TPTB(I))+
+     1                      TKP(L)*(TSUM-TPTA(I))                     
+
+*D TSTEP.67
+C***** comment this out for ALL semi implicit temperature tendencies off
+C                       TT(K)=TT(K)-TMPA(L)
+
+*D INISI.104
+C***** semi implicit VA and AH parts of tau matrix
+      TAU(1)=0.
+C***** SI VA
+      TAU(1)=TAU(1) + 0.5*TT01S2*(SIGMAH(1)-1.0)
+C***** SI AH
+      TAU(1)=TAU(1) + TKP(1)*C(1)
+
+*D INISI.106
+         TAU(L)=0.
+C***** SI VA
+         TAU(L)=0.5*TT01S2*DSIGMA(L)
+
+*D INISI.131
+            TTAU=0.
+C***** SI VA
+            TTAU=TTM*(SIGM-TMM)
+
+*D INISI.132
+C***** SI VA
+            IF (L.LT.NL) TTAU=TTAU+TT01S2*(SIG-TM)
+
+*D INISI.134
+C***** SI AH
+            IF (M.LE.L) TTAU=TTAU+TTKP*C(IT)
+
+
+*I MLTRI.182
+      print*,'before tstep ',T(100)
+*I MLTRI.183
+      print*,'before dstep ',T(100)
+*I MLTRI.194
+      print*,'after dstep ',T(100)
+
+
+*/
+*/code modifications to enable model to sweep through training data
+*/if LTRAIN is TRUE but not if it is false
+*D MLTRI.118
+      IF (LTRAIN.NE.1) REWIND 9
+C     REWIND 9
+*D MLTRI.32
+      REWIND 9
+      LTRAIN=.FALSE.
+      KTRAIN=0
+
+C*****following calls are in place of the pointless routine, INITAL
+
+      CALL INISET
+      CALL INIGAU
+      CALL INISI
+
+  998 FORMAT(1X,5(1X,F6.4))
+      PRINT*,'G MATRIX....'
+      PRINT*
+      DO III=0,NL2-NL,NL
+      WRITE(6,998)(G(III+J),J=1,NL)
+      ENDDO
+      PRINT*
+      PRINT*,'SCALED TAU MATRIX....'
+      PRINT*
+      DO III=0,NL2-NL,NL
+      WRITE(6,998)(TAU(III+J)/T0(1)/AKAP,J=1,NL)
+      ENDDO
+      PRINT*
+
+      CALL INIRES
+
+  111 CONTINUE
+
+      CALL INISTR(KTRAIN)
+
+      IF (LTRAIN) THEN
+      KTRAIN=KTRAIN+1
+      PRINT*
+      PRINT*,'******************************'
+      PRINT*,'MAKING ',KTRAIN,' TH FORECAST'
+      PRINT*,'******************************'
+      PRINT*
+      END IF
+*I MLTRI.216
+C     IF (LTRAIN.AND.(KTRAIN.LT.1620)) GO TO 111
+      IF (LTRAIN.AND.(KTRAIN.LT.9659)) GO TO 111
+*D INISTR.2     
+      SUBROUTINE INISTR(KTRAIN)
+*/
+*/
+*/set up variables for extra spectral transforms
+*I MLTRI.22
+      DIMENSION DAGUV(2*IGD),DAFUV(2*IGD)
+*I MLTRI.23
+      EQUIVALENCE (DAGUV(1),UG(1)),(DAFUV(1),FUG(1))
+*/
+*/maintain global mean surface pressure at initial value
+*/and apply diabatic tendency to SP in DSTEP
+*D TSTEP.89
+      DO 41 I=2,IGA
+*D TSTEP.150
+      DO 43 I=2,IGA
+*D DSTEP.23
+      DO 20 I=2,IGA
+      SP(I)=SP(I) + DELT2*VP(I)
+*/
+*I TSTEP.52
+C                       D1(L)=RCN*DMI(K)+DELT*(TMPB(L)+GSI1+T0(L)*SPPA
+C    1                       +RCN*DT(K)+DELT*(TMPA(L)-T0(L)*VPS))
+C     IF (I1.EQ.2) PRINT*,L,D1(L)
+*/
+*/preset VP to zero and use it as diabatic ln sp tendency then 
+*/do an extra set of spectral transforms to calculate diabatic 
+*/tendencies in grid space before doing it in spectral space
+*/
+*I MLTRI.191
+         DO 34 I=1,IGA
+            VP(I)=0.
+   34    CONTINUE
+
+      IF (LGPDAMP) THEN
+
+      IF (JGL.EQ.1) REWIND 25
+      JL=1
+
+C     Main loop over latitudes
+
+      DO 105 IH=1,JG
+         JH=IH
+         IF(JGL.EQ.1) READ(25) ALP,DALP,RLP,RDLP
+
+C        Go from spectral space to grid point space using
+C        inverse Legendre and Fourier transforms
+
+         CALL LTIUV
+
+         NFT=2*NL
+         NTR=NFT*NHEM
+         NT=(NTR-1)/NCRAY
+         NRST=NTR-NCRAY*NT
+
+         DO 110 I=1,NT
+            CALL FFT991(DAGUV(1+(I-1)*NCRAY*MGPP),WORK,TRIG,IFAX,1
+     &                 ,MGPP,MG,NCRAY,1)
+ 110     CONTINUE
+         CALL FFT991(DAGUV(1+ NT*NCRAY*MGPP),WORK,TRIG,IFAX,1
+     &              ,MGPP,MG,NRST,1)
+ 
+C        Calculate nonlinear terms
+
+         CALL DGRMLT
+
+C        Go from grid point space to spectral space using
+C        direct Legendre and Fourier transforms
+
+         DO 120 I=1,NT
+            CALL FFT991(DAFUV(1+(I-1)*NCRAY*MGPP),WORK,TRIG,IFAX,1
+     &                 ,MGPP,MG,NCRAY,-1)
+ 120     CONTINUE
+         CALL FFT991(DAFUV(1+ NT*NCRAY*MGPP),WORK,TRIG,IFAX,1
+     &              ,MGPP,MG,NRST,-1)
+
+         CALL LTDUV
+
+         JL=JL+JINC
+ 105  CONTINUE
+
+C     Make sure grid point damping hasn't given any global mean 
+C     tendency to Z and D
+
+      DO 35 K=1,NL
+         I=IGA*(K-1)+1
+         II=I+NWJ2
+         ZT(II)=0.0
+         DT(I)=0.0
+   35 CONTINUE
+
+      END IF
+C
+*/
+*/set up some extra fields for reading in forcing data
+*/and parameters to do with grid point damping
+*I RESTOR.5
+     &,ZFCE(IGB),DFCE(IGB),TFCE(IGB),SPFCE(IGA)
+     &,ZFED(IGB),DFED(IGB),TFED(IGB),SPFED(IGA)
+     &,ZFAN(IGB),DFAN(IGB),TFAN(IGB),SPFAN(IGA)
+     &,ZDMP(IGB),DDMP(IGB),TDMP(IGB),SPDMP(IGA)
+     &,ZDMI(IGB),DDMI(IGB),TDMI(IGB),SPDMI(IGA)
+     &,MASK(IGC,JG),GG(IGC,JG),CD(IGC,JG),AA1,AA2,AAT
+      COMPLEX ZFCE,DFCE,TFCE,SPFCE,ZFED,DFED,TFED,SPFED
+     &,ZFAN,DFAN,TFAN,SPFAN
+     &,ZDMP,DDMP,TDMP,SPDMP,ZDMI,DDMI,TDMI,SPDMI
+*/
+*/change the way force/damp/restoration is read
+*D MLTRI.54,56
+*D INISTR.214,217
+C     IF (KTRAIN.EQ.0) THEN
+         IF (LMODE) THEN
+            REWIND(10)
+            READ(10)RKTMP,RMTMP,DTMP,ZDMI,DDMI,TDMI,SPDMI,RLTMP
+            REWIND(17)
+            READ(17)ZDMP,DDMP,TDMP,SPDMP
+C*****(DMP fields are from 1 tstp integration of unforced model)
+         END IF
+         IF (LFCE) THEN
+            REWIND(13)
+            READ(13)ZFCE,DFCE,TFCE,SPFCE
+         END IF
+         IF (LFED) THEN
+            REWIND(14)
+            READ(14)ZFED,DFED,TFED,SPFED
+C           IF (LLIN) THEN
+C              DO I=1,IGB
+C              ZFED(I)=ZFED(I)/1.E4
+C              DFED(I)=DFED(I)/1.E4
+C              TFED(I)=TFED(I)/1.E4
+C              ENDDO
+C              DO I=1,IGA
+C              SPFED(I)=SPFED(I)/1.E4
+C              ENDDO
+C           ENDIF
+         END IF
+         IF (LFAN) THEN
+            REWIND(15)
+            READ(15)ZFAN,DFAN,TFAN,SPFAN
+            IF (LLIN) THEN
+               DO I=1,IGB
+               ZFAN(I)=ZFAN(I)/1.E4
+               DFAN(I)=DFAN(I)/1.E4
+               TFAN(I)=TFAN(I)/1.E4
+               ENDDO
+               DO I=1,IGA
+               SPFAN(I)=SPFAN(I)/1.E4
+               ENDDO
+            ENDIF
+         END IF
+C     END IF
+*/read in grid point fields and calculate drag
+*I INISTR.14
+*CALL LEGAU
+*I INISTR.45
+C     initialise grid point fields to zero and read if required
+C
+      IF (KTRAIN.EQ.0) THEN
+
+      DO J=1,JG
+      DO I=1,IGC
+         GG(I,J)=0
+         MASK(I,J)=0
+      ENDDO
+      ENDDO
+
+      READ(18)GG
+      READ(19)MASK
+
+C     work out area averages of terms in drag coeff for normalization
+
+      RMASKAVE=0.
+      FHAVE=0.
+      CSAVE=0.
+      DO J=1,JG
+      DO IHEM=1,NHEM
+      DO II=1,MG
+         I=II+(IHEM-1)*MGPP
+         RMASKAVE=RMASKAVE+REAL(MASK(I,J))*CS(J)/REAL(NHEM*MG*JG)
+         FH=MASK(I,J)*(1.-EXP(-GG(I,J)/1000.))
+         FHAVE=FHAVE+FH*CS(J)/REAL(NHEM*MG*JG)
+      ENDDO
+      ENDDO
+         CSAVE=CSAVE+CS(J)/REAL(JG)
+      ENDDO
+      RMASKAVE=RMASKAVE/CSAVE
+      FHAVE=FHAVE/CSAVE
+
+      PRINT*,'AREA MEAN OF LAND SEA MASK IS = ',RMASKAVE
+      PRINT*,'AREA MEAN OF OROGRAPHIC DRAG FUNCTION IS = ',FHAVE
+
+C     define a normalized drag coefficient that makes standard drag 
+C     a function of land/sea and orography with area average 1.
+
+      DO J=1,JG
+      DO I=1,IGC
+         FH=MASK(I,J)*(1.-EXP(-GG(I,J)/1000.))
+         CD(I,J)=(1. + AA1*REAL(MASK(I,J)) + AA2*FH)
+     &           /(1. + AA1*RMASKAVE + AA2*FHAVE)
+      ENDDO
+      ENDDO
+
+      END IF
+C
+*/include forcing on spectral coeficients and linear damping
+*/Also add optional modefinder code for 3d normal mode work.
+*/
+*D DIFUSE.15,55
+
+C*****FORCING
+
+      IF (LFCE) THEN
+      DO 40 I=1,IGB
+      ZT(I)=ZT(I) + ZFCE(I)
+      DT(I)=DT(I) + DFCE(I)
+      TT(I)=TT(I) + TFCE(I)
+   40 CONTINUE
+      DO 41 I=1,IGA
+      VP(I)=VP(I) + SPFCE(I)
+   41 CONTINUE
+      END IF
+
+      IF ((LMODE).AND.(KOUNT.EQ.1)) THEN
+      PRINT*,'PERTURBING SFCE PRESSURE'
+      DO I=1,IGA
+      VP(I)=VP(I) + SPFCE(I)/100.
+      ENDDO
+      END IF
+
+      IF (LFED) THEN
+      DO 42 I=1,IGB
+      ZT(I)=ZT(I) - ZFED(I)
+      DT(I)=DT(I) - DFED(I)
+      TT(I)=TT(I) - TFED(I)
+   42 CONTINUE
+      DO 43 I=1,IGA
+      VP(I)=VP(I) - SPFED(I)
+   43 CONTINUE
+      END IF
+
+CHACK**turn heating off after a day
+      IF (KOUNT.GT.24) LFAN=.FALSE.
+      IF (LFAN) THEN
+      DO 44 I=1,IGB
+C     ZT(I)=ZT(I) + ZFAN(I)
+C     DT(I)=DT(I) + DFAN(I)
+      TT(I)=TT(I) + TFAN(I)
+   44 CONTINUE
+      DO 45 I=1,IGA
+C     VP(I)=VP(I) + SPFAN(I)
+   45 CONTINUE
+      END IF
+
+      IF(DAMP.GT.0.0) THEN
+
+C*****DAMPING
+
+C*****stratosphere
+      DO 51 I=1,IGA
+C     ZT(I)=ZT(I) - DAMP*Z(I)*0.05
+C     DT(I)=DT(I) - DAMP*D(I)*0.05
+      TT(I)=TT(I) - DAMP*T(I)*0.1
+   51 CONTINUE
+
+C*****troposphere
+      DO 52 I=IGA+1,(NL-1)*IGA
+C     ZT(I)=ZT(I) - DAMP*Z(I)*0.05
+C     DT(I)=DT(I) - DAMP*D(I)*0.05
+      TT(I)=TT(I) - DAMP*T(I)*0.1
+   52 CONTINUE
+
+C*****boundary layer
+      IF (LGPDAMP.NE.1) THEN
+      DO 53 I=(NL-1)*IGA+1,IGB
+      ZT(I)=ZT(I) - DAMP*Z(I)
+      DT(I)=DT(I) - DAMP*D(I)
+   53 CONTINUE
+      END IF
+
+      DO 54 I=(NL-1)*IGA+1,IGB
+      TT(I)=TT(I) - DAMP*T(I)*AAT
+   54 CONTINUE
+
+C*****remove damping from planetary vorticity !
+C*****stratosphere
+      K=1
+      I=(K-1)*IGA + 1
+C     ZT(I)=ZT(I) + DAMP*EZ*0.05
+
+C*****troposphere
+      DO 61 K=2,NL-1
+      I=(K-1)*IGA + 1
+C     ZT(I)=ZT(I) + DAMP*EZ*0.05
+   61 CONTINUE
+
+C*****boundary layer
+      I=(NL-1)*IGA + 1
+      IF (LGPDAMP.NE.1) ZT(I)=ZT(I) + DAMP*EZ
+
+C*****optional extra damping on everything to stabilize model 
+C     without changing its modal structure
+C     STAB=0.2
+C     DO I=1,IGB
+C     ZT(I)=ZT(I) - DAMP*Z(I) *STAB
+C     DT(I)=DT(I) - DAMP*D(I) *STAB
+C     TT(I)=TT(I) - DAMP*T(I) *STAB
+C     ENDDO
+C     DO I=1,IGA
+C     VP(I)=VP(I) - DAMP*SP(I) *STAB
+C     ENDDO
+
+      ENDIF
+*/
+*/
+*DECK SCALEDOWN
+      SUBROUTINE SCALEDOWN
+
+C     Scales perturbation about climatology (ZDMP etc) if it 
+C     gets outside decadal bounds in a norm based on sum of 
+C     squares of level 6 vorticity perturbations
+
+*CALL PARAM1
+*CALL PARAM2
+*CALL BLANK
+*CALL SPECTR
+*CALL BATS
+*CALL RESTOR
+
+      RNORM=0.
+      DO I=5*IGA+1,6*IGA
+      RNORM=RNORM+(ABS(Z(I)-ZDMP(I)))**2.
+      ENDDO
+      RNORM=SQRT(RNORM)
+
+      RNORM0=1.E-5
+      RATIO=RNORM/RNORM0
+      PRINT*,' RATIO= ',RATIO,' RNORM= ',RNORM
+
+      IF ((RATIO.GT.10.).OR.(RATIO.LT.0.1)) THEN
+      PRINT*,'RNORM= ',RNORM,' RATIO= ',RATIO,' ADJUSTING ANOM'
+
+      DO I=1,IGB
+      Z(I)=(Z(I)-ZDMP(I))/RATIO + ZDMP(I)
+      D(I)=(D(I)-DDMP(I))/RATIO + DDMP(I)
+      T(I)=(T(I)-TDMP(I))/RATIO + TDMP(I)
+      ZMI(I)=(ZMI(I)-ZDMI(I))/RATIO + ZDMI(I)
+      DMI(I)=(DMI(I)-DDMI(I))/RATIO + DDMI(I)
+      TMI(I)=(TMI(I)-TDMI(I))/RATIO + TDMI(I)
+      ENDDO
+      DO I=1, IGA
+      SP(I)=(SP(I)-SPDMP(I))/RATIO + SPDMP(I)
+      SPMI(I)=(SPMI(I)-SPDMI(I))/RATIO + SPDMI(I)
+      ENDDO
+      ENDIF
+
+      RETURN
+      END
+
+*DECK LTIUV
+      SUBROUTINE LTIUV
+
+C     Inverse Legendre transform for the diabatic part of the timestep.
+C     Transforms from spectral to Fourier space at the current latitude
+C     (pair).  In a global run the resulting arrays are complete
+C     (i.e. even+odd) Fourier coefficients at the northern & southern
+C     hemisphere rows.
+C
+C     Calls the modular routine HEXP to transform U and V fields.
+
+*CALL PARAM1
+*CALL PARAM2
+*CALL BLANK
+*CALL GRIDP3
+*CALL LEGAU
+*CALL POLYNO
+*CALL SPECTR
+
+C     Preset Fourier arrays.
+
+      DO 10 L=1,NL
+         DO 10 I=1,IGL
+            CHIG(I,L)=0.
+            SFG(I,L)=0.
+            UG(I,L)=0.
+            VG(I,L)=0.
+   10 CONTINUE
+
+C     Remove planetary vorticity in spectral space, so all transforms
+C     use relative vorticity.
+
+      DO 30 I=1,IGB,IGA
+         Z(I)=Z(I)-EZ
+   30 CONTINUE
+
+C        Wind components: calls to HEXP give following Fourier fields:
+C           SFG  :   streamfunction.
+C           CHIG :   velocity potential.
+C           UG   :   -U(rotational).
+C           VG   :   V(divergent).
+
+         CALL HEXP(Z,SFG ,NL,5)
+         CALL HEXP(D,CHIG,NL,6)
+         CALL HEXP(Z,UG  ,NL,7)
+         CALL HEXP(D,VG  ,NL,8)
+
+C     Restore planetary vorticity in spectral space.
+
+      DO 40 I=1,IGB,IGA
+         Z(I)=Z(I)+EZ
+   40 CONTINUE
+
+C     Sum to give total winds.  CMPA takes x-derivative.
+
+      DO 60 L=1,NL
+         DO 60 I=1,IGL
+            UG(I,L)=CMPA(I)*CHIG(I,L)-UG(I,L)
+            VG(I,L)=CMPA(I)* SFG(I,L)+VG(I,L)
+   60 CONTINUE
+
+      RETURN
+      END
+*/
+*/
+*DECK LTDUV
+      SUBROUTINE LTDUV
+
+C     Direct Legendre transform for the diabatic part of the timestep.
+C     Transforms from Fourier to spectral space at the current latitude
+C     (pair).  In a global run the input arrays are complete (even+odd)
+C     Fourier coefficients at the northern & southern hemisphere rows.
+C
+C     Calls the modular routine HANAL for tendencies of U and V to
+C     give grid point contributions to ZT and DT.
+C
+C     The Fourier work array passed to HANAL must be dimensioned with
+C     (at least) the maximum number of levels used in the HANAL calls.
+
+*CALL PARAM1
+*CALL PARAM2
+*CALL BLANK
+*CALL GRIDP3
+*CALL LEGAU
+*CALL POLYNO
+*CALL SPECTR
+
+      COMPLEX GWORK(IGL,NL)
+
+C     Prepare Fourier arrays:
+C     - change sign of terms which contribute negatively to tendency,
+C     - apply (1-mu**2) weighting,
+C     - take zonal derivatives,
+C     - make copies of effective momentum tendencies.
+
+      DO 10 L=1,NL
+         DO 10 I=1,IGL
+            FVGT(I,L)=FVG(I,L)
+            FUGT(I,L)=-FUG(I,L)
+            FUG(I,L)=CMPA(I)*FUG(I,L)/CSSQ(JH)
+            FVG(I,L)=CMPA(I)*FVG(I,L)/CSSQ(JH)
+   10 CONTINUE
+
+C     legendre transfroms to give ZT and DT
+
+         CALL HANAL(FVG,GWORK,ZT,NL,1)
+         CALL HANAL(FUGT,GWORK,ZT,NL,3)
+         CALL HANAL(FUG,GWORK,DT,NL,2)
+         CALL HANAL(FVGT,GWORK,DT,NL,4)
+
+      RETURN
+      END
+*/
+*/
+*DECK DGRMLT
+      SUBROUTINE DGRMLT
+
+C     Computes nonlinear tendencies in grid point space
+C     for the present latitude
+
+*CALL PARAM1
+*CALL PARAM2
+*CALL BLANK
+*CALL LEGAU
+*CALL GRIDP2
+*CALL RESTOR
+
+      WSC=10./WW/RADEA
+      IOFM=0
+      DO 800 IHEM=1,NHEM
+         DO 160 L=1,NL
+
+            IF (L.LT.NL) THEN
+               DO 210 I=1,MG
+                  J=I+IOFM
+                  FUG(J,L)=0.
+                  FVG(J,L)=0.
+ 210           CONTINUE
+            ELSE
+               DO 220 I=1,MG
+                  J=I+IOFM
+
+C*****linear drag, just a function of terrain
+                  FUG(J,L)= -DAMP*UG(J,L) *CD(J,JH)
+                  FVG(J,L)= -DAMP*VG(J,L) *CD(J,JH)
+
+C*****OR nonlinear drag: same as linear for wind speed = WSC
+C     WSSQ=(UG(J,L)*UG(J,L)+VG(J,L)*VG(J,L))/CS(JH)/CS(JH)
+C     WS=SQRT(WSSQ)
+C     DRAG=DAMP  *CD(J,JH) *(WS/2. + WSSQ/2./WSC)
+C     FUG(J,L)= -DRAG * UG(J,L)/WS
+C     FVG(J,L)= -DRAG * VG(J,L)/WS
+
+ 220           CONTINUE
+            ENDIF
+
+ 160     CONTINUE
+         IOFM=MGPP
+ 800  CONTINUE
+
+      RETURN
+      END
+*/
+*/
+/EOF
+#
+############################################# NAMELIST DATA.
+#
+# quick reminder of logic:
+# if NOT LRSTRT - initial run, balancing (LBALAN) or all arrays zero. 
+# if LRSTRT then: 
+#  if LSHORT - read history (avoid short tsteps by setting KITS=0). 
+#  if NOT LSHORT - read restart 
+#
+#jxj
+cat  <<  /EOF  >  data
+ &INPPL
+ &END
+ &INPRN KRUN=1,BEGDAY=0.,KITS=0,TSPD=24.,PNU=0.0
+ TDISS=0.0,NDEL=8,
+ T0=5*0.0,
+ LSHORT=.T.,
+ LBALAN=.F.
+ LRSTRT=.T.,
+ LRESTIJ=.F.,
+ LNOISE=.F.,
+ LGPDAMP=.F.
+ LFCE=.F.
+ LFED=.F.
+ LFAN=.F.
+ LLIN=.F.
+ LMODE=.F.
+ LTRAIN=.T.
+ &END
+ &INPOP RNTAPE=100.,KOUNTH=24,KOUNTR=2400,
+ KOUNTE=0,NLAT=16,
+ LSPO=5*.F.,LGPO=5*.F.
+ &END
+ &INPRS RESTIM=0.0,AA1=1.0,AA2=1.0,AAT=0.5
+ &END
+ &INPRSIJ
+ &END
+ &INPBL 
+ KBAL=5,LTBAL=.T.
+ &END
+/EOF
+#
+############################################# ERROR PROCESSING FUNCTION.
+#
+ABORT ()
+{
+echo '!!!!!!!!!! ERROR PROCESSING !!!!!!!!!!'
+set +e
+#[ $1 = EXECUTE ]  &&  cat fort.2            # List output.
+#[ $1 = EXECUTE ]  &&  debug -B -s $EXEC
+#\rm data updates igcm1.f fort.* prog
+exit 1
+}
+#
+############################################# COMPILE AND RUN PROGRAM.
+#
+if [ $COMPILE = yes ]
+then
+    nupdate  -p $KD/igcm1.npl  -c igcm1     \
+             -i updates                     \
+             -f  -w 72  -o sq       ||  ABORT NUPDATE
+if [ $MACHINE = sun ] 
+then
+    fflags='-O3 -fast -r8 -f -w '
+fi
+if [ $MACHINE = sgi ] 
+then
+    fflags='-O -static -r8'
+fi
+    f77  $fflags -o $EXEC igcm1.f -L $KD/lib \
+      -l$MACHINE'fft1' -l$MACHINE'blas1' -l$MACHINE'util1' || ABORT f77
+#rm igcm1.f
+fi
+
+#
+if [ $RUN = yes ]
+then
+    ln  -s data  fort.7
+    ln  -s $KD2/ZDTP_OtoM.dat.spec_corrected+250 fort.10
+
+#   ln  -s $EXPDIR/data.fli  fort.13
+#   ln  -s $EXPDIR/data.fed  fort.14
+#   ln  -s $KD2/data.fan  fort.15
+    ln  -s /zemo2/jiaxj/igcm/data/MG64JG16.orog.b  fort.18
+    ln  -s /zemo2/jiaxj/igcm/data/MG64JG16.mask.b  fort.19
+#
+    ln  -s $EXPDIR/history  fort.9
+    ln  -s $EXPDIR/restart.11  fort.11
+    ln  -s $EXPDIR/restart.12  fort.12
+    ln  -s $EXPDIR/results  fort.2
+#
+    $EXEC                        ||  ABORT EXECUTE
+    set +e                                  # Disable exit on error.
+#    cat fort.2                             
+    ls -alF    $EXPDIR                      # List files.
+#   \rm data fort.* 
+fi
+exit 0                                      # Successful termination.
+done
+#
+############################################# ERROR PROCESSING.
+#
+set +e                                      # Disable exit on error.
+#cat fort.2                                  # List output.
+#debug  -B  -s prog                          # Debug.
+exit 1                                      # Abort.
+#
+############################################# END OF JOB.

@@ -1,0 +1,151 @@
+#!/usr/bin/sh
+
+count=1
+
+while [ $count -le 30 ]
+do
+
+
+f77 monthly.f
+ln -sf /mnt/climate/data/loach/jiaxj/Data/SGCM/OutData/IDEAL/165W25N/First30/OUTpred_clim$count.dat fort.10
+a.out
+mv fort.11 OUTpred_sum.dat
+clean
+###################
+
+clean
+#
+BEGDAY=1.
+ENDDAY=30.
+ISTEP=1
+ITSTEPS=48
+
+echo 'compiling getSLPpre.f'
+f77 -o getSLPpre getSLPpre.f
+
+INFILE=OUTpred_sum.dat
+
+echo 'running getSLPpre'
+
+cat << /EOF | getSLPpre $INFILE
+$BEGDAY
+$ENDDAY
+$ISTEP
+/EOF
+
+
+#prepare input to presmap
+#
+cat << /EOF > temphead
+COMMON
+  TEMPDIR=/zemo2/jiaxj/igcm/T21L5/EXPERIMENTS/iAMIP_1
+  HOMEDIR=/zemo2/jiaxj/igcm/T21L5/EXPERIMENTS/iAMIP_1
+  CURRENTDIR=/zemo2/jiaxj/igcm/T21L5/EXPERIMENTS/iAMIP_1
+  BEGDAY=$BEGDAY
+  ENDDAY=$ENDDAY
+  DIAGNOSTICS=SG
+  UTF=1.4
+  LEVELTYPE=IS
+  PRINT=T
+  PLOT=F
+  PRINTSIGFIG=3
+  ASCIICHARS=2
+  SCRATCH=F
+  OROGRAPHY=F
+  FREQSAMPLING=$ITSTEPS
+  FREQPRINT=$ITSTEPS
+/EOF
+cat temphead presmap11.SLPSG > fort.10
+#
+#run presmap and smap
+#
+echo running presmap
+presmap11.out
+ln -s data.res.sp fort.9
+
+echo running smap
+smap11.out
+mv gridout SLP_clim.dat 
+rm -f fort.*
+rm -f data.*
+rm tem*
+rm nre*
+##################################
+
+f77 monthly.f
+##------------
+ln -sf /mnt/climate/data/loach/jiaxj/Data/SGCM/OutData/IDEAL/165W25N/First30/OUTpred_$count.dat fort.10
+a.out
+mv fort.11 OUTpred_sum.dat
+clean
+###################
+
+clean
+#
+BEGDAY=1.
+ENDDAY=30.
+ISTEP=1
+ITSTEPS=48
+
+echo 'compiling getSLPpre.f'
+f77 -o getSLPpre getSLPpre.f
+
+INFILE=OUTpred_sum.dat
+
+echo 'running getSLPpre'
+
+cat << /EOF | getSLPpre $INFILE
+$BEGDAY
+$ENDDAY
+$ISTEP
+/EOF
+
+#prepare input to presmap
+#
+cat << /EOF > temphead
+COMMON
+  TEMPDIR=/zemo2/jiaxj/igcm/T21L5/EXPERIMENTS/iAMIP_1
+  HOMEDIR=/zemo2/jiaxj/igcm/T21L5/EXPERIMENTS/iAMIP_1
+  CURRENTDIR=/zemo2/jiaxj/igcm/T21L5/EXPERIMENTS/iAMIP_1
+  BEGDAY=$BEGDAY
+  ENDDAY=$ENDDAY
+  DIAGNOSTICS=SG
+  UTF=1.4
+  LEVELTYPE=IS
+  PRINT=T
+  PLOT=F
+  PRINTSIGFIG=3
+  ASCIICHARS=2
+  SCRATCH=F
+  OROGRAPHY=F
+  FREQSAMPLING=$ITSTEPS
+  FREQPRINT=$ITSTEPS
+/EOF
+cat temphead presmap11.SLPSG > fort.10
+#
+#run presmap and smap
+#
+echo running presmap
+presmap11.out
+ln -s data.res.sp fort.9
+
+echo running smap
+smap11.out
+mv gridout SLP.dat
+rm -f fort.*
+rm -f data.*
+rm tem*
+rm nre*
+##################################
+f77 4getres1.f
+a.out
+
+mv fort.20  /mnt/climate/data/loach/jiaxj/Data/SGCM/OutData/IDEAL/165W25N/First30/Anom$count.dat
+#mv fort.20  Anom.dat
+
+
+    count=`expr $count + 1`
+done
+
+clean
+

@@ -1,0 +1,63 @@
+#!/usr/bin/sh
+
+
+
+clean
+#
+BEGDAY=1.
+ENDDAY=90.
+ISTEP=1
+ITSTEPS=48
+
+echo 'compiling getSLPpre.f'
+f77 -o getSLPpre getSLPpre.f
+
+INFILE=/mnt/climate/data/loach/jiaxj/Data/SGCM/OutData/IDEAL/135E/Enssum_90.dat
+
+echo 'running getSLPpre'
+
+cat << /EOF | getSLPpre $INFILE
+$BEGDAY
+$ENDDAY
+$ISTEP
+/EOF
+
+
+#prepare input to presmap
+#
+cat << /EOF > temphead
+COMMON
+  TEMPDIR=/zemo2/jiaxj/igcm/T21L5/EXPERIMENTS/iAMIP_1
+  HOMEDIR=/zemo2/jiaxj/igcm/T21L5/EXPERIMENTS/iAMIP_1
+  CURRENTDIR=/zemo2/jiaxj/igcm/T21L5/EXPERIMENTS/iAMIP_1
+  BEGDAY=$BEGDAY
+  ENDDAY=$ENDDAY
+  DIAGNOSTICS=SG
+  UTF=1.4
+  LEVELTYPE=IS
+  PRINT=T
+  PLOT=F
+  PRINTSIGFIG=3
+  ASCIICHARS=2
+  SCRATCH=F
+  OROGRAPHY=F
+  FREQSAMPLING=$ITSTEPS
+  FREQPRINT=$ITSTEPS
+/EOF
+cat temphead presmap11.SLPSG > fort.10
+#
+#run presmap and smap
+#
+echo running presmap
+./presmap11.out
+#/zemo2/jiaxj/igcm/EXPERIMENTS/iAMIP_1/presmap11.out
+ln -s data.res.sp fort.9
+
+echo running smap
+./smap11.out
+#/zemo2/jiaxj/igcm/EXPERIMENTS/iAMIP_1/smap11.out
+mv gridout /mnt/climate/data/loach/jiaxj/Data/SGCM/OutData/IDEAL/135E/Enssum_SLP_90.dat 
+rm -f fort.*
+rm -f data.*
+rm tem*
+rm nre*

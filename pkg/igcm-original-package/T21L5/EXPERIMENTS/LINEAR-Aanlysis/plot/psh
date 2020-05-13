@@ -1,0 +1,6 @@
+#/usr/bin/sh
+
+gxeps -i resp.met -o 1.eps
+#gxps -c resp.met -o 1.ps
+
+gs 1.eps

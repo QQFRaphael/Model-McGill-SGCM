@@ -1,0 +1,20 @@
+# /usr/bin/sh
+
+f77 monthly.f
+
+
+count=1
+while [ $count -le 50 ]
+do
+
+  echo exp$expnum/OUTpred_0$count.dat
+ln -sf ../test/OUTpred_$count.dat fort.10
+a.out $count
+
+count=`expr $count + 1`
+done
+
+mv fort.11 OUTpred.monthly
+
+
+clean

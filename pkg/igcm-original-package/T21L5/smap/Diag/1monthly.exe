@@ -1,0 +1,13 @@
+# /usr/bin/sh
+
+f77 mon.f
+
+
+##------------
+ln -sf /zemo2/jiaxj/igcm/SVD2_AO_Ideal/test/OUTpred_inter.dat fort.10
+a.out 80
+
+mv fort.11 test.dat
+
+
+

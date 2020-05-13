@@ -1,0 +1,6 @@
+#/usr/bin/sh
+
+gxps -i svd.met -o 1.ps
+#gxps -c resp.met -o 1.ps
+
+gs 1.ps

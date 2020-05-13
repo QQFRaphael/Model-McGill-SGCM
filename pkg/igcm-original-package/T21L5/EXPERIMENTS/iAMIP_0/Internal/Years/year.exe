@@ -1,0 +1,59 @@
+# /usr/bin/sh
+
+f77 year.f
+
+
+count=1
+while [ $count -le 9 ]
+do
+
+
+expnum=1
+while [ $expnum -le 30 ]
+do
+
+  echo $expnum
+##------------
+
+  echo exp$expnum/
+ln -sf exp$expnum/year0$count.dat fort.21
+ln -sf Years/year0$count.dat       fort.22
+a.out 
+
+
+expnum=`expr $expnum + 1`
+done
+
+
+count=`expr $count + 1`
+echo $count
+done
+
+###############
+
+while [ $count -le 51 ]
+do
+
+
+expnum=1
+while [ $expnum -le 30 ]
+do
+
+  echo $expnum
+##------------
+
+  echo exp$expnum/
+ln -sf exp$expnum/year$count.dat fort.21
+ln -sf Years/year$count.dat       fort.22
+a.out
+
+
+expnum=`expr $expnum + 1`
+done
+
+
+count=`expr $count + 1`
+echo $count
+done
+
+

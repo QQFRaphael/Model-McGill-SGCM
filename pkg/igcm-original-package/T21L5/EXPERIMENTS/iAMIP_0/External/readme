@@ -1,0 +1,29 @@
+Use the ensemble data (51 years) to get EOFs:
+
+                       Data(51 years)
+			    |	
+                            |
+       	               EOF analyze
+		    (get EOFs and PCs)  @1 @2 
+                            |   
+                            |
+	             Plot EOF and PC    @3 @4
+			      
+
+******************************************************************************************************************
+1 getZ500.f is used to get the ensemble data, file is written in Z500.dat
+ 
+2 getEOFens.f is used to calculate the 51 eigenvectors.(here we only write out the first 10 eigenvectors)
+  The data file used is Z500.dat. result is written in Z500EOF. Also the percentages of the eigenvectors 
+  have been calculated and written in percEOF_Z500.dat.
+
+3  efficEns.f is used to calculate the 51 PCs of the correspoinding eigenvectors(EOFs). 
+   data files needed are Z500.dat and Z500EOF. Result is written in PCsZ500Ens and fort.88.
+   fort.88 is used by xmgr to plot the graphics.
+
+
+4  plotEOFens.f is used to read Z500EOF to and generate files to plot the graphics for EOF
+   This work should be done on tropo: /usr/people/jiaxj/ncarplot
+
+
+

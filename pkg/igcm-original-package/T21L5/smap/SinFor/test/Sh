@@ -1,0 +1,6 @@
+sh 1monthly.exe
+f77 2getEns.f 
+a.out
+sh 3getSLP.exe* 
+f77 4getres1.f
+a.out

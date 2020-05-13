@@ -1,0 +1,22 @@
+# /usr/bin/sh
+
+f77 monthly.f
+
+
+##------------
+count=1
+while [ $count -le 30 ]
+do
+
+  echo OUTpred_$count.dat
+ln -sf /zemo2/jiaxj/igcm/SVD2_AO_Ideal/Exp_eq/test/OUTpred_$count.dat fort.10
+a.out
+
+count=`expr $count + 1`
+done
+
+mv fort.11 OUTpred_sum.dat
+
+rm -f fort.*
+
+

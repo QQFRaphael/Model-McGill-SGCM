@@ -1,0 +1,19 @@
+1 run /zemo2/jiaxj/igcm/T21L5/jobs/1FORCE+edd0.job  
+  drive the model integrate one step, use climatology as the
+  initial condition and set the forcing equals to zero.
+  output is under FORCE+edd0/restart.12
+
+2 run 1getforceLinear.sh under this directory to get the forcing Force+edd.dat_crtd, which can maintain 
+  the atmosphere unchangable.
+
+
+3 run /zemo2/jiaxj/igcm/T21L5/jobs/2PERT+E1LinearNAO.job, integrate for 30 days.
+  this time, use the forcing obtained in step 2, and add a perturbation forcing.
+  the perturbation forcing (spec.dat) is obtained under:  /zemo2/jiaxj/igcm/SVD2_AO_Ideal  f77 1getanom.f;  f77 2getanom.f
+  and /zemo2/jiaxj/force/BUDGET/test.sh.  sh test.sh
+  (Note: the perturbation forcing includes only the forcing anomalies, It does not include the climat basis)
+
+
+4  Then: Analyze the model integration result.
+   use 2monthly.exe, 3... 4.... to analyze the model output. 
+

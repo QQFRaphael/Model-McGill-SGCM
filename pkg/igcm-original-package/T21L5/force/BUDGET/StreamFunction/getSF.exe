@@ -1,0 +1,64 @@
+#!/usr/bin/sh
+
+#script to get stream function
+#convert history file to single precision
+#
+BEGDAY=1.
+ENDDAY=1.
+ISTEP=1
+ITSTEPS=48
+
+echo 'compiling getsfpre.f'
+f77 -o getsfpre getsfpre.f
+
+#INFILE=../spec.dat
+ INFILE=/zemo2/jiaxj/igcm/TROF_To/Reg.dat
+
+
+echo 'running getsfpre'
+
+cat << /EOF | getsfpre $INFILE
+$BEGDAY
+$ENDDAY
+$ISTEP
+/EOF
+
+
+#prepare input to presmap
+#
+cat << /EOF > temphead
+COMMON
+  TEMPDIR=/zemo2/jiaxj/igcm/iAMIP_1
+  HOMEDIR=/zemo2/jiaxj/igcm/iAMIP_1
+  CURRENTDIR=/zemo2/jiaxj/igcm/iAMIP_1
+  BEGDAY=$BEGDAY
+  ENDDAY=$ENDDAY
+  DIAGNOSTICS=SG
+  UTF=1.4
+  LEVELTYPE=IS
+  PRINT=T
+  PLOT=F
+  PRINTSIGFIG=3
+  ASCIICHARS=2
+  SCRATCH=F
+  OROGRAPHY=F
+  FREQSAMPLING=$ITSTEPS
+  FREQPRINT=$ITSTEPS
+/EOF
+cat temphead presmap11.SF > fort.10
+#
+#run presmap and smap
+#
+echo running presmap
+/zemo2/jiaxj/igcm/iAMIP_1/presmap11.out
+ln -s data.res.sp fort.9
+
+echo running smap
+/zemo2/jiaxj/igcm/iAMIP_1/smap11.out
+mv gridout SF.dat
+mv fort.8 titles_SF
+#mv nrecsout nrecs_SF
+rm -f fort.*
+rm -f data.*
+rm -f nre*
+rm -f tem*

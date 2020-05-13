@@ -1,0 +1,20 @@
+CCC
+First, for each member, you need to do the monthly average and then extract 
+the Z500 field and the SLP field.
+1 monthly.exe, monthly.f do monthly average to the results of integrations.
+  OUTpred.monthly is generated. Then,you can get rid of the daily data.
+  for each exp*, there are totally 51*6 monthly averaged fields.
+
+2a) getZ500.exe extract Z fields from OUTpred.monthly,Z_monthly.dat is generated.
+2b) getSLP.exe extract SLP fields from OUTpred.monthly,SLP_monthly.dat is generated.
+
+
+
+
+CCC
+Second, after you did the first step for all the memberes, you need to do Ensemble
+mean to get rid of the internal influence.
+3a) getAveZ500.f average Z500 fields for "N" members.Z500.dat is generated.
+3b) getAveSLP.f  average SLP fields for "N" members.SLP.dat is generated.
+
+5 use getEnsEOF.f get the EOF of ensemble mean.

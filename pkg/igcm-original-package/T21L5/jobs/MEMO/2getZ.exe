@@ -1,0 +1,61 @@
+#!/usr/bin/sh
+
+
+
+clean
+#
+BEGDAY=1.
+ENDDAY=60.
+ISTEP=1
+ITSTEPS=48
+
+echo 'compiling getSLPpre.f'
+f77 -o getZ500pre getZ500pre.f
+
+INFILE=OUTpred_cont.dat
+
+echo 'running getZ500pre'
+
+cat << /EOF | getZ500pre $INFILE
+$BEGDAY
+$ENDDAY
+$ISTEP
+/EOF
+
+
+#prepare input to presmap
+#
+cat << /EOF > temphead
+COMMON
+  TEMPDIR=/zemo2/jiaxj/igcm/iAMIP_1
+  HOMEDIR=/zemo2/jiaxj/igcm/iAMIP_1
+  CURRENTDIR=/zemo2/jiaxj/igcm/iAMIP_1
+  BEGDAY=$BEGDAY
+  ENDDAY=$ENDDAY
+  DIAGNOSTICS=SG
+  UTF=1.4
+  LEVELTYPE=IS
+  PRINT=T
+  PLOT=F
+  PRINTSIGFIG=3
+  ASCIICHARS=2
+  SCRATCH=F
+  OROGRAPHY=F
+  FREQSAMPLING=$ITSTEPS
+  FREQPRINT=$ITSTEPS
+/EOF
+cat temphead presmap11.ZSG > fort.10
+#
+#run presmap and smap
+#
+echo running presmap
+/zemo2/jiaxj/igcm/iAMIP_1/presmap11.out
+ln -s data.res.sp fort.9
+
+echo running smap
+/zemo2/jiaxj/igcm/iAMIP_1/smap11.out
+mv gridout Z.dat
+rm -f fort.*
+rm -f data.*
+rm tem*
+#rm nre*

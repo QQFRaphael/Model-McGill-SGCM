@@ -1,0 +1,60 @@
+#!/usr/bin/sh
+
+#script to get Z500
+#convert history file to single precision
+#
+BEGDAY=1.
+ENDDAY=1.
+ISTEP=1
+ITSTEPS=48
+
+echo 'compiling getSLPpre.f'
+f77 -o getSLPpre getSLPpre.f
+
+ INFILE=/zemo2/jiaxj/igcm/CONTROL1/history
+#INFILE=/diska/hlin/igcm/CONTROL/history.ave90day
+echo 'running getSLPpre'
+
+cat << /EOF | getSLPpre $INFILE
+$BEGDAY
+$ENDDAY
+$ISTEP
+/EOF
+
+
+#prepare input to presmap
+#
+cat << /EOF > temphead
+COMMON
+  TEMPDIR=/zemo2/jiaxj/igcm/smap/T21L5/SLP
+  HOMEDIR=/zemo2/jiaxj/igcm/smap/T21L5/SLP
+  CURRENTDIR=/zemo2/jiaxj/igcm/smap/T21L5/SLP
+  BEGDAY=$BEGDAY
+  ENDDAY=$ENDDAY
+  DIAGNOSTICS=SG
+  UTF=1.4
+  LEVELTYPE=IS
+  PRINT=T
+  PLOT=F
+  PRINTSIGFIG=3
+  ASCIICHARS=2
+  SCRATCH=F
+  OROGRAPHY=F
+  FREQSAMPLING=$ITSTEPS
+  FREQPRINT=$ITSTEPS
+/EOF
+cat temphead presmap11.SLPSG > fort.10
+#
+#run presmap and smap
+#
+echo running presmap
+presmap11.out
+ln -s data.res.sp fort.9
+
+echo running smap
+smap11.out
+mv gridout /zemo2/jiaxj/igcm/results/SLP/SLP_CONTROL.dat
+#mv fort.8 data/titles_SLP_CONTROL
+#mv nrecsout data/nrecs_SLP_CONTROL
+rm fort.*
+#

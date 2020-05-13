@@ -1,0 +1,72 @@
+****get the monthly average of the integration results for the 51 members and write them into one file****
+****the first month has been reduced from the monthly average********
+****for each exp, we have 51 members which come from 51 years which use 51 force fields. Each member use different IC for corresponding force field . Here the forcing field is yearly force field come from /zemo2/jiaxj/data/FORCE ***
+****Here the monthly average results of the integeration is spectrum form. we need to transfer it into Gauss grid form****
+**** We only use the Z500 to do PNA analysis ,then only need to transfer the geopotential height of 500mb***
+**** For AO analysis, we use the SLP to do analysis****
+
+
+
+*******************
+/zemo2/jiaxj/igcm/iAMIP_0:
+  1 monthly.exe is used to do monthly average, files are: 
+    (/zemo2/jiaxj/igcm/iAMIP_0/exp*/OUTpred.monthly)
+    this files include all variables which are spectrum form.
+ 
+  2 getZ500_iAMIP0.exe* is used to read OUTpred.monthly files and extract
+    Z and T from it and transform them into Gaussin from. files are 
+    (/zemo2/jiaxj/igcm/iAMIP_0/exp*/ZT_monthly.dat)
+*******************
+
+
+/zemo2/jiaxj/igcm/iAMIP_0/Ensemble:
+  1 ensemble.exe is used to seprate these ZT_monthly.dat into 51 files.
+    (/zemo2/jiaxj/igcm/iAMIP_0/Ensemble/exp*/year*.dat) here read out Z only, 
+    for these 51*30 files, each file include 3 months data.
+
+  2 year.exe is used to collect the data for the same year from these year*.dat 
+    files and write them into same files, 
+    (/zemo2/jiaxj/igcm/iAMIP_0/Ensemble/Years/year*.dat)
+    totally we get 51 files
+*******************
+
+
+/zemo2/jiaxj/igcm/iAMIP_0/Ensemble/Years:
+  1 average.exe is used to get the seasonal average for the 51 years,
+    (/zemo2/jiaxj/igcm/iAMIP_0/Ensemble/Years/mean*.dat)
+    
+  2 plot.exe is used to tranform these files into mean grid form to plot the graphics.
+    this work.
+*******************
+
+
+/zemo2/jiaxj/igcm/iAMIP_0/Ensemble/Years/Eof
+  this will be used to do EOF analyses for the 51 mean fields
+********************
+
+
+
+/zemo2/jiaxj/igcm/iAMIP_0/Season
+  1 seasonmean.exe is used to read the ZT_monthly.dat files, get seasonal average
+    and seperate them into 51 years.
+    (/zemo2/jiaxj/igcm/iAMIP_0/Season/exp*/season*.dat)
+
+  2 abnorm.exe is used to get the abnormalies. It read season*.dat and 
+    /zemo2/jiaxj/igcm/iAMIP_0/Season/Mean/mean*.dat, then subtract them.
+    here the mean*dat is from /zemo2/jiaxj/igcm/iAMIP_0/Ensemble/Years/mean*.dat.
+    the results have been written in:
+    /zemo2/jiaxj/igcm/iAMIP_0/Season/Abnorm/abnorm*.dat
+***********************
+
+
+
+/zemo2/jiaxj/igcm/iAMIP_0/Season/Eof
+     this will be used to do EOF analyses for the 30*51 abnomalies fields
+
+
+
+
+*************************************************************
+*************************************************************
+getEOFens.f is used to get the EOFs for the 51 ensemble fields.
+ 

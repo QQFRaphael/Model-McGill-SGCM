@@ -1,0 +1,27 @@
+#! /usr/bin/sh
+KD=/usr/people/hall/igcm
+KD2=/zemo2/hlin/igcm/T31L10/data
+EXPID=test                # Experiment identifier.
+#EXPDIR=/mnt/climate/data/loach/jiaxj/Data/SGCM/OutData/T31L10/$EXPID          # Experiment directory.
+EXPDIR=/home/jiaxj/Work/zemo/igcm/T31L10/Output/$EXPID          # Experiment directory.
+EXEC=prog.exe       # Full path of the executable 
+############################################# UPDATE DIRECTIVES.
+[ ! -d $EXPDIR ]   &&   mkdir -p $EXPDIR
+#
+count=1
+
+    ln  -s /zemo2/jiaxj/igcm/jobs/T31L10/data/MG96JG24.orog.b  fort.18
+    ln  -s /zemo2/jiaxj/igcm/jobs/T31L10/data/MG96JG24.mask.b  fort.19
+    ln  -s data  fort.7
+
+while [ $count -le 1 ]
+do
+	getic $count
+    ln  -s $KD2/FORCE_DJFmean54yr.dat   fort.13
+    ln  -s $EXPDIR/OUTpred.dat   fort.9
+#
+    $EXEC
+
+    count=`expr $count + 1`
+    rm fort.10 fort.13 fort.9
+done

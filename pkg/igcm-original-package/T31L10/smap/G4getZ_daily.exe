@@ -1,0 +1,65 @@
+#!/usr/bin/sh
+
+clean
+#script to get Z500
+#convert history file to single precision
+#
+BEGDAY=1.
+ENDDAY=14400.
+ISTEP=1
+ITSTEPS=64
+
+echo 'compiling getZ500pre.f'
+f77 -o getZ500pre getZ500pre.f
+
+INFILE=/zemo2/jiaxj/igcm/RESULT/CONTROLT31exp/hisInter.dat
+
+echo 'running getZ500pre'
+
+cat << /EOF | getZ500pre $INFILE
+$BEGDAY
+$ENDDAY
+$ISTEP
+/EOF
+
+
+#prepare input to presmap
+#
+cat << /EOF > temphead
+COMMON
+  TEMPDIR=/zemo2/jiaxj/igcm/smap/T31L10
+  HOMEDIR=/zemo2/jiaxj/igcm/smap/T31L10
+  CURRENTDIR=/zemo2/jiaxj/igcm/smap/T31L10
+  BEGDAY=$BEGDAY
+  ENDDAY=$ENDDAY
+  DIAGNOSTICS=SG
+  UTF=1.4
+  LEVELTYPE=IS
+  PRINT=T
+  PLOT=F
+  PRINTSIGFIG=3
+  ASCIICHARS=2
+  SCRATCH=F
+  OROGRAPHY=F
+  FREQSAMPLING=$ITSTEPS
+  FREQPRINT=$ITSTEPS
+/EOF
+cat temphead presmap11.ZTSG > fort.10
+#
+#run presmap and smap
+#
+echo running presmap
+/D1/hlin/igcm/smap/presmap11.out
+ln -s data.res.sp fort.9
+
+echo running smap
+/D1/hlin/igcm/smap/T31L10/smap11.out
+mv gridout /zemo2/jiaxj/igcm/RESULT/CONTROLT31exp/Z_daily.dat
+mv fort.8 titles_Z
+mv nrecsout nrecs_Z
+rm fort.*
+#
+
+# new job-------------------
+#
+clean
